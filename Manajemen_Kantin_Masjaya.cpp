@@ -1027,6 +1027,7 @@ void beli(dataUser* currentUser, dataUser* headUser) {
     cout << setfill('=') << setw(47) << "=" << setfill(' ') << endl;
 
     int pilihan;
+    bool found = false;
     cout << "Masukkan nomor stand yang ingin dilihat: ";
     cin >> pilihan;
     check_angka(pilihan, "Masukkan nomor stand yang ingin dilihat");
@@ -1037,7 +1038,16 @@ void beli(dataUser* currentUser, dataUser* headUser) {
     while (user) {
         if (user->role == "Penjual") {
             if (index == pilihan) {
+                found = true;
                 while (true) {
+                    if (!user->headMenu) {
+                        system("cls");
+                        setConsoleColor(RED);
+                        cout << "Penjual belum memiliki menu yang terdaftar." << endl;
+                        setConsoleColor(LIGHTGRAY);
+                        Sleep(1000);
+                        break;
+                    }
                     system("cls");
                     showMenuPenjual(user);
                     dataMenu* menu = user->headMenu;
@@ -1092,10 +1102,13 @@ void beli(dataUser* currentUser, dataUser* headUser) {
         }
         user = user->next;
     }
-    system("cls");
-    setConsoleColor(RED);
-    cout << "Stand dengan nomor " << pilihan << " tidak ditemukan." << endl << endl;
-    setConsoleColor(LIGHTGRAY);
+
+    if (!found) {
+        system("cls");
+        setConsoleColor(RED);
+        cout << "Stand dengan nomor " << pilihan << " tidak ditemukan." << endl << endl;
+        setConsoleColor(LIGHTGRAY);
+    }
 }
 
 void showHistory(dataUser* user) {
@@ -1267,6 +1280,14 @@ void pilihMenu() {
                 if (index == pilihan) {
                     found = true;
                     while (true) {
+                        if (!user->headMenu) {
+                            system("cls");
+                            setConsoleColor(RED);
+                            cout << "Penjual belum memiliki menu yang terdaftar." << endl;
+                            setConsoleColor(LIGHTGRAY);
+                            Sleep(1000);
+                            break;
+                        }
                         system("cls");
                         showMenuPenjual(user);
                         string aksi;
