@@ -756,14 +756,6 @@ void buyMenu(dataUser* pembeli, dataMenu* menu, dataUser* penjual, int jumlah) {
     int totalHarga = menu->harga * jumlah;
 
     int idUnikPesanan = generateIdPesanan();
-    
-    pesanan* newPesanan = new pesanan{idUnikPesanan, pembeli->username, menu->kodeMenu, menu->namaMenu, jumlah ,"Pending", nullptr};
-    if (!penjual->queuePesananTail) {
-        penjual->queuePesananHead = penjual->queuePesananTail = newPesanan;
-    } else {
-        penjual->queuePesananTail->next = newPesanan;
-        penjual->queuePesananTail = newPesanan;
-    }
 
     struk* newStrukItem = new struk{idUnikPesanan, penjual->nama, menu->kodeMenu, menu->namaMenu, jumlah, menu->harga, 0, "Pending", pembeli->stackStruk};
     pembeli->stackStruk = newStrukItem;
@@ -820,7 +812,7 @@ void checkout(dataUser* pembeli) {
     cout << "Masukkan pilihan: ";
     cin >> pilihan;
     if (pilihan == "1") {
-        // Hapus semua pesanan dari struk
+      
         while (pembeli->stackStruk) {
             struk* temp = pembeli->stackStruk;
             pembeli->stackStruk = pembeli->stackStruk->next;
@@ -831,14 +823,30 @@ void checkout(dataUser* pembeli) {
         cout << "Pesanan dibatalkan." << endl << endl;
         setConsoleColor(LIGHTGRAY);
         return;
-    } else if (pilihan == "2") {
+} else if (pilihan == "2") {
         currentItem = pembeli->stackStruk;
         while (currentItem) {
             histori* newHistoriItem = new histori{
                 currentItem->idPesanan, currentItem->namaPenjual, currentItem->kodeMenu, 
                 currentItem->namaMenu, currentItem->jumlah, currentItem->harga, 1, "Pending", pembeli->stackHistori
             };
-            pembeli->stackHistori = newHistoriItem;
+        pembeli->stackHistori = newHistoriItem;
+
+            dataUser* penjual = headUser;
+            while (penjual) {
+                if (penjual->nama == currentItem->namaPenjual) {
+                    pesanan* newPesanan = new pesanan{currentItem->idPesanan, pembeli->username, currentItem->kodeMenu, currentItem->namaMenu, currentItem->jumlah, "Pending", nullptr};
+                    if (!penjual->queuePesananTail) {
+                        penjual->queuePesananHead = penjual->queuePesananTail = newPesanan;
+                    } else {
+                        penjual->queuePesananTail->next = newPesanan;
+                        penjual->queuePesananTail = newPesanan;
+                    }
+                    break;
+                }
+                penjual = penjual->next;
+            }
+
             currentItem = currentItem->next;
         }
         while (pembeli->stackStruk) {
