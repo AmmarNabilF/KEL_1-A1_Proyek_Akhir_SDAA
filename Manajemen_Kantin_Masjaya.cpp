@@ -660,6 +660,26 @@ void boyerMooreSearchMenu(dataUser* currentUser) {
     }
 }
 
+// ======================== FITUR PENJUAL ========================
+
+void showMenuPenjual(dataUser* user) {
+    system("cls");
+    cout << "\n" << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
+    cout << setfill('=') << setw(17) << "=" << setfill(' ') << "      DAFTAR  MENU      " << setfill('=') << setw(19) << "=" << setfill(' ') << endl;
+    cout << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
+    cout << left << setw(20) << "Kode Menu" << setw(30) << "Nama Menu" << setw(11) << "Harga" << endl;
+    cout << setfill('-') << setw(60) << "-" << setfill(' ') << endl;
+
+    dataMenu* menu = user->headMenu;
+    while (menu) {
+        cout << left << setw(20) << menu->kodeMenu
+             << setw(30) << menu->namaMenu
+             << "Rp" << menu->harga << endl;
+        menu = menu->next;
+    }
+    cout << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
+}
+
 void addMenu(dataUser* user) {
     system("cls");
     cout << "=============" << endl;
@@ -683,6 +703,47 @@ void addMenu(dataUser* user) {
 
     setConsoleColor(LIGHTGREEN);
     cout << "Menu berhasil ditambahkan di awal" << endl;
+    setConsoleColor(LIGHTGRAY);
+}
+
+void ubahmenu(dataUser* user) {
+    system("cls");
+    dataMenu* data = user->headMenu;
+    if (!data) {
+        setConsoleColor(RED);
+        cout << "Anda belum memiliki menu yang terdaftar." << endl;
+        setConsoleColor(LIGHTGRAY);
+        return;
+    } else {
+        showMenuPenjual(user);
+    }
+
+    int kode;
+    cout << "Masukkan kode menu yang ingin diubah: ";
+    cin >> kode;
+    check_angka(kode, "Masukkan kode menu yang ingin diubah");
+
+    dataMenu* curr = user->headMenu;
+    while (curr) {
+        if (curr->kodeMenu == kode) {
+            cout << "Masukkan perubahan nama menu: ";
+            cin.clear();
+            cin.ignore();
+            getline(cin, curr->namaMenu);
+            check_string_kosong(curr->namaMenu, "Masukkan perubahan nama menu");
+            cout << "Masukkan perubahan harga menu: Rp";
+            cin >> curr->harga;
+            check_angka(curr->harga, "Masukkan perubahan harga menu");
+            setConsoleColor(LIGHTGREEN);
+            cout << "Menu berhasil diubah." << endl;
+            setConsoleColor(LIGHTGRAY);
+            return;
+        }
+        curr = curr->next;
+    }
+
+    setConsoleColor(RED);
+    cout << "Menu dengan kode " << kode << " tidak ditemukan." << endl;
     setConsoleColor(LIGHTGRAY);
 }
 
@@ -751,6 +812,87 @@ void delMenu(dataUser* user) {
     cout << "Menu dengan kode " << kode << " tidak ditemukan." << endl;
     setConsoleColor(LIGHTGRAY);
 }
+
+void showPesanan(dataUser* user) {
+    system("cls"); 
+    pesanan* curr = user->queuePesananHead;
+    pesanan* prev = nullptr;
+
+    if (!curr) {
+        cout << "Tidak ada pesanan saat ini" << endl;
+        Sleep(1000);
+        return;
+    }
+
+    while (curr) {
+        cout << "======================================" << endl;
+        cout << "|           ID PESANAN: " << setw(2) << curr->idPesanan << "           |" << endl;
+        cout << "======================================" << endl;
+        cout << left << setw(12) << "Pembeli"   << ": " << curr->usernamePembeli << endl;
+        cout << left << setw(12) << "Nama Menu" << ": " << curr->namaMenu << endl;
+        cout << left << setw(12) << "Jumlah"    << ": " << curr->jumlah << endl;
+        cout << left << setw(12) << "Status"    << ": " << curr->status << endl;
+        cout << "======================================" << endl;
+
+        string pilihan;
+        cout << "\n===============================" << endl;
+        cout << "              AKSI             " << endl;
+        cout << "===============================" << endl;
+        cout << "[1] Tandai selesai pesanan" << endl;
+        cout << "[2] Batalkan pesanan" << endl;
+        cout << "[0] Kembali" << endl;
+        cout << "===============================" << endl;
+        cout << "Masukkan pilihan: ";
+        cin >> pilihan;
+
+        if (pilihan == "1") {
+            curr->status = "Complete";
+            setConsoleColor(LIGHTGREEN);
+            cout << "Pesanan ditandai selesai!" << endl;
+            setConsoleColor(LIGHTGRAY);
+        } else if (pilihan == "2") {
+            curr->status = "Cancel";
+            setConsoleColor(RED);
+            cout << "Pesanan ditolak!" << endl;
+            setConsoleColor(LIGHTGRAY);
+        } else if (pilihan == "0") {
+            break;
+        } else {
+            setConsoleColor(RED);
+            cout << "Pilihan tidak valid." << endl;
+            setConsoleColor(LIGHTGRAY);
+            continue;
+        }
+        Sleep(1000);
+        system("cls");
+        dataUser* userIter = headUser;
+        while (userIter) {
+            histori* hist = userIter->stackHistori;
+            while (hist) {
+                if (hist->idPesanan == curr->idPesanan) {
+                    hist->status = curr->status;
+                    hist->sudahDibayar = (pilihan == "1") ? 1 : 2;
+                }
+                hist = hist->next;
+            }
+            userIter = userIter->next;
+        }
+
+        if (prev) {
+            prev->next = curr->next;
+        } else {
+            user->queuePesananHead = curr->next;
+        }
+        if (curr == user->queuePesananTail) {
+            user->queuePesananTail = prev;
+        }
+        pesanan* temp = curr;
+        curr = curr->next;
+        delete temp;
+    }
+}
+
+// ======================== FITUR PEMBELI ========================
 
 void buyMenu(dataUser* pembeli, dataMenu* menu, dataUser* penjual, int jumlah) {
     int totalHarga = menu->harga * jumlah;
@@ -865,24 +1007,6 @@ void checkout(dataUser* pembeli) {
     }
 }
 
-void showMenuPenjual(dataUser* user) {
-    system("cls");
-    cout << "\n" << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
-    cout << setfill('=') << setw(17) << "=" << setfill(' ') << "      DAFTAR  MENU      " << setfill('=') << setw(19) << "=" << setfill(' ') << endl;
-    cout << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
-    cout << left << setw(20) << "Kode Menu" << setw(30) << "Nama Menu" << setw(11) << "Harga" << endl;
-    cout << setfill('-') << setw(60) << "-" << setfill(' ') << endl;
-
-    dataMenu* menu = user->headMenu;
-    while (menu) {
-        cout << left << setw(20) << menu->kodeMenu
-             << setw(30) << menu->namaMenu
-             << "Rp" << menu->harga << endl;
-        menu = menu->next;
-    }
-    cout << setfill('=') << setw(60) << "=" << setfill(' ') << endl;
-}
-
 void beli(dataUser* currentUser, dataUser* headUser) {
     dataUser* user = headUser;
     int index = 1;
@@ -974,86 +1098,6 @@ void beli(dataUser* currentUser, dataUser* headUser) {
     setConsoleColor(LIGHTGRAY);
 }
 
-
-void showPesanan(dataUser* user) {
-    system("cls"); 
-    pesanan* curr = user->queuePesananHead;
-    pesanan* prev = nullptr;
-
-    if (!curr) {
-        cout << "Tidak ada pesanan saat ini" << endl;
-        Sleep(1000);
-        return;
-    }
-
-    while (curr) {
-        cout << "======================================" << endl;
-        cout << "|           ID PESANAN: " << setw(2) << curr->idPesanan << "           |" << endl;
-        cout << "======================================" << endl;
-        cout << left << setw(12) << "Pembeli"   << ": " << curr->usernamePembeli << endl;
-        cout << left << setw(12) << "Nama Menu" << ": " << curr->namaMenu << endl;
-        cout << left << setw(12) << "Jumlah"    << ": " << curr->jumlah << endl;
-        cout << left << setw(12) << "Status"    << ": " << curr->status << endl;
-        cout << "======================================" << endl;
-
-        string pilihan;
-        cout << "\n===============================" << endl;
-        cout << "              AKSI             " << endl;
-        cout << "===============================" << endl;
-        cout << "[1] Tandai selesai pesanan" << endl;
-        cout << "[2] Batalkan pesanan" << endl;
-        cout << "[0] Kembali" << endl;
-        cout << "===============================" << endl;
-        cout << "Masukkan pilihan: ";
-        cin >> pilihan;
-
-        if (pilihan == "1") {
-            curr->status = "Complete";
-            setConsoleColor(LIGHTGREEN);
-            cout << "Pesanan ditandai selesai!" << endl;
-            setConsoleColor(LIGHTGRAY);
-        } else if (pilihan == "2") {
-            curr->status = "Cancel";
-            setConsoleColor(RED);
-            cout << "Pesanan ditolak!" << endl;
-            setConsoleColor(LIGHTGRAY);
-        } else if (pilihan == "0") {
-            break;
-        } else {
-            setConsoleColor(RED);
-            cout << "Pilihan tidak valid." << endl;
-            setConsoleColor(LIGHTGRAY);
-            continue;
-        }
-        Sleep(1000);
-        system("cls");
-        dataUser* userIter = headUser;
-        while (userIter) {
-            histori* hist = userIter->stackHistori;
-            while (hist) {
-                if (hist->idPesanan == curr->idPesanan) {
-                    hist->status = curr->status;
-                    hist->sudahDibayar = (pilihan == "1") ? 1 : 2;
-                }
-                hist = hist->next;
-            }
-            userIter = userIter->next;
-        }
-
-        if (prev) {
-            prev->next = curr->next;
-        } else {
-            user->queuePesananHead = curr->next;
-        }
-        if (curr == user->queuePesananTail) {
-            user->queuePesananTail = prev;
-        }
-        pesanan* temp = curr;
-        curr = curr->next;
-        delete temp;
-    }
-}
-
 void showHistory(dataUser* user) {
     system("cls");
 
@@ -1092,47 +1136,6 @@ void showHistory(dataUser* user) {
         curr = curr->next;
     }
     cout << setfill('=') << setw(120) << "=" << setfill(' ') << endl;
-}
-
-void ubahmenu(dataUser* user) {
-    system("cls");
-    dataMenu* data = user->headMenu;
-    if (!data) {
-        setConsoleColor(RED);
-        cout << "Anda belum memiliki menu yang terdaftar." << endl;
-        setConsoleColor(LIGHTGRAY);
-        return;
-    } else {
-        showMenuPenjual(user);
-    }
-
-    int kode;
-    cout << "Masukkan kode menu yang ingin diubah: ";
-    cin >> kode;
-    check_angka(kode, "Masukkan kode menu yang ingin diubah");
-
-    dataMenu* curr = user->headMenu;
-    while (curr) {
-        if (curr->kodeMenu == kode) {
-            cout << "Masukkan perubahan nama menu: ";
-            cin.clear();
-            cin.ignore();
-            getline(cin, curr->namaMenu);
-            check_string_kosong(curr->namaMenu, "Masukkan perubahan nama menu");
-            cout << "Masukkan perubahan harga menu: Rp";
-            cin >> curr->harga;
-            check_angka(curr->harga, "Masukkan perubahan harga menu");
-            setConsoleColor(LIGHTGREEN);
-            cout << "Menu berhasil diubah." << endl;
-            setConsoleColor(LIGHTGRAY);
-            return;
-        }
-        curr = curr->next;
-    }
-
-    setConsoleColor(RED);
-    cout << "Menu dengan kode " << kode << " tidak ditemukan." << endl;
-    setConsoleColor(LIGHTGRAY);
 }
 
 void sort(dataUser* currentUser) {
